@@ -1,29 +1,42 @@
 import os
-from dotenv import load_dotenv
 import streamlit as st
 import pandas as pd
+from dotenv import load_dotenv
+
 from modules.generator import gerar_dados
 from modules.matcher import conciliar_dados
+from modules.database import salvar_auditoria, ler_historico
 
 load_dotenv()
+
+st.set_page_config(
+    page_title="FinMatch AI - Auditoria", 
+    page_icon="🛡️", 
+    layout="wide"
+)
 
 st.title("🛡️ FinMatch AI: Reconciliação Bancária Inteligente")
 st.markdown("""
 Esta ferramenta utiliza **IA Generativa** para identificar discrepâncias financeiras e sugerir conciliações entre o extrato bancário e o sistema interno.
+---
 """)
 
-st.sidebar.header("Configurações")
+st.sidebar.header("⚙️ Configurações")
 n_transacoes = st.sidebar.slider("Número de transações para teste", 5, 50, 10)
 
 if st.sidebar.button("🎲 Gerar Novos Dados"):
+    if 'resultado' in st.session_state:
+        del st.session_state['resultado']
+    
     df_sis, df_bco = gerar_dados(n_transacoes)
+    
     st.session_state['df_sis'] = df_sis
     st.session_state['df_bco'] = df_bco
-    st.sidebar.success("Dados gerados!")
+    st.sidebar.success(f"{n_transacoes} transações geradas!")
 
 col1, col2 = st.columns(2)
 
-if 'df_sis' in st.session_state:
+if 'df_sis' in st.session_state and 'df_bco' in st.session_state:
     with col1:
         st.subheader("🏢 Sistema ERP (Esperado)")
         st.dataframe(st.session_state['df_sis'], use_container_width=True)
@@ -32,14 +45,46 @@ if 'df_sis' in st.session_state:
         st.subheader("🏦 Extrato Bancário (Real)")
         st.dataframe(st.session_state['df_bco'], use_container_width=True)
 
+    st.divider()
     if st.button("🚀 Iniciar Conciliação com IA"):
-        with st.spinner("O Gemini está analisando as divergências..."):
-            resultado = conciliar_dados(st.session_state['df_bco'], st.session_state['df_sis'])
-            
-            st.divider()
-            st.header("📊 Resultado da Auditoria")
+        with st.spinner("O Gemini está analisando as divergências e cruzando dados..."):
+            resultado_df = conciliar_dados(st.session_state['df_bco'], st.session_state['df_sis'])
+            st.session_state['resultado'] = resultado_df
 
-            st.dataframe(resultado, use_container_width=True)
-            st.success("Processamento concluído!")
+if 'resultado' in st.session_state:
+    st.header("📊 Resultado da Auditoria")
+    
+    def colorir_metodo(val):
+        color = '#90EE90' if 'Heurística' in str(val) else '#FFD700'
+        return f'background-color: {color}; color: black'
 
+    st.dataframe(
+        st.session_state['resultado'].style.applymap(colorir_metodo, subset=['Metodo']), 
+        use_container_width=True
+    )
+    
+    if st.button("💾 Salvar Auditoria no Banco de Dados (Cloud)"):
+        with st.spinner("Conectando ao Neon PostgreSQL..."):
+            sucesso = salvar_auditoria(st.session_state['resultado'])
+            if sucesso:
+                st.success("✅ Dados persistidos na nuvem com sucesso!")
+                st.session_state['historico'] = ler_historico()
+            else:
+                st.error("❌ Falha ao salvar no banco. Verifique sua DATABASE_URL.")
 
+st.divider()
+st.subheader("📜 Histórico de Auditoria (Cloud DB)")
+
+if 'historico' not in st.session_state:
+    st.session_state['historico'] = ler_historico()
+
+col_hist1, col_hist2 = st.columns([1, 4])
+with col_hist1:
+    if st.button("🔄 Atualizar Histórico"):
+        st.session_state['historico'] = ler_historico()
+
+if st.session_state.get('historico'):
+    df_hist = pd.DataFrame(st.session_state['historico'])
+    st.dataframe(df_hist, use_container_width=True)
+else:
+    st.info("Nenhum histórico encontrado no banco de dados.")
