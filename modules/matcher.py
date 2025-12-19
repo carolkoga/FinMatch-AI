@@ -8,13 +8,15 @@ load_dotenv()
 def conciliar_dados(df_banco, df_sistema):
     """Cruzar os dados do banco com o sistema."""
     resultados = []
+    valor_atual = linha_banco['Valor_Extrato']
 
     for index, linha_banco in df_banco.iterrows():
         match_exato = df_sistema[df_sistema['Valor_Previsto'] == linha_banco['Valor_Extrato']]
 
         if not match_exato.empty:
             res={
-                "id_transacao": linha_banco['ID_Transacao'],
+                "ID_Transacao": linha_banco['ID_Transacao'],
+                "Valor": valor_atual,
                 "status": "✅ Conciliado",
                 "Metodo": "Heurística (Valor Exato)", 
                 "Usou_IA": False,
@@ -30,7 +32,8 @@ def conciliar_dados(df_banco, df_sistema):
             analise_ai = analisar_com_ai(linha_banco, candidatos)
 
             res = {
-                "id_transacao": linha_banco['ID_Transacao'],
+                "ID_Transacao": linha_banco['ID_Transacao'],
+                "Valor": valor_atual,
                 "status": "⚠️ Analisado por IA",
                 "metodo": "Inteligência Artificial",
                 "Usou_IA": True,
@@ -55,7 +58,7 @@ def analisar_com_ai(transacao_banco, candidatos_sistema):
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-falsh",
+            model="gemini-2.5-flash",
             contents=prompt)
         return response.text
     except Exception as e:
