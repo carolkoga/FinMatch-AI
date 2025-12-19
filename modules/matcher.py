@@ -8,19 +8,21 @@ load_dotenv()
 def conciliar_dados(df_banco, df_sistema):
     """Cruzar os dados do banco com o sistema."""
     resultados = []
-    valor_atual = linha_banco['Valor_Extrato']
 
     for index, linha_banco in df_banco.iterrows():
+        valor_atual = linha_banco['Valor_Extrato']
+        id_transacao = linha_banco['ID_Transacao']
+
         match_exato = df_sistema[df_sistema['Valor_Previsto'] == linha_banco['Valor_Extrato']]
 
         if not match_exato.empty:
             res={
                 "ID_Transacao": linha_banco['ID_Transacao'],
                 "Valor": valor_atual,
-                "status": "✅ Conciliado",
+                "Status": "✅ Conciliado",
                 "Metodo": "Heurística (Valor Exato)", 
                 "Usou_IA": False,
-                "detalhes": f"Correspondência encontrada para o título {match_exato.iloc[0]['ID_Titulo']}"}
+                "Detalhes": f"Correspondência encontrada para o título {match_exato.iloc[0]['ID_Titulo']}"}
 
         else:
             #não encontrou valor, encamiha para o AI analisar.
@@ -34,10 +36,10 @@ def conciliar_dados(df_banco, df_sistema):
             res = {
                 "ID_Transacao": linha_banco['ID_Transacao'],
                 "Valor": valor_atual,
-                "status": "⚠️ Analisado por IA",
+                "Status": "⚠️ Analisado por IA",
                 "metodo": "Inteligência Artificial",
                 "Usou_IA": True,
-                "detalhes": analise_ai}
+                "Detalhes": analise_ai}
             
         resultados.append(res)
     return pd.DataFrame(resultados)
@@ -64,8 +66,28 @@ def analisar_com_ai(transacao_banco, candidatos_sistema):
     except Exception as e:
         return f"Erro na AI: {e}"
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from modules.generator import gerar_dados
-    df_sis, df_bco = gerar_dados(5)
-    df_final = conciliar_dados(df_bco, df_sis)
-    print(df_final)
+    
+    print("\n🧪 INICIANDO TESTE DO MATCHER COM IA...")
+    
+    # 1. Gera dados fictícios
+    df_sistema, df_banco = gerar_dados(5)
+    
+    print("--- Dados do Sistema (ERP) ---")
+    print(df_sistema[["ID_Titulo", "Valor_Previsto"]])
+    print("\n--- Dados do Banco (Extrato) ---")
+    print(df_banco[["ID_Transacao", "Valor_Extrato", "Descricao_Banco"]])
+    
+    # 2. Executa a conciliação
+    print("\n🚀 Rodando Conciliação (pode demorar alguns segundos por causa da IA)...")
+    try:
+        resultado = conciliar_dados(df_banco, df_sistema)
+        
+        print("\n✅ RESULTADO DA CONCILIAÇÃO:")
+        print(resultado[["ID_Transacao", "Status", "Metodo"]])
+        print("\nJustificativa da IA (primeira linha):")
+        print(resultado["Detalhes"].iloc[0])
+        
+    except Exception as e:
+        print(f"❌ Erro durante o teste: {e}")
