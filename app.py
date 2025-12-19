@@ -53,11 +53,7 @@ if 'df_sis' in st.session_state and 'df_bco' in st.session_state:
 
     if 'resultado' in st.session_state:
         st.header("📊 Resultado da Auditoria")
-        # Debug visual temporário
-        st.subheader("🔍 Inspeção de Debug (Somente Desenvolvedor)")
-        st.write("Colunas detectadas:", list(st.session_state['resultado'].columns))
-        st.json(st.session_state['resultado'].iloc[0].to_dict())
-        
+             
         def colorir_metodo(val):
             color = '#90EE90' if 'Heurística' in str(val) else '#FFD700'
             return f'background-color: {color}; color: black'
@@ -90,6 +86,6 @@ if 'df_sis' in st.session_state and 'df_bco' in st.session_state:
 
     if st.session_state.get('historico'):
         df_hist = pd.DataFrame(st.session_state['historico'])
-        st.dataframe(df_hist, uwidth='stretch')
+        st.dataframe(df_hist, width='stretch')
     else:
         st.info("Nenhum histórico encontrado no banco de dados.")
