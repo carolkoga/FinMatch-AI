@@ -15,7 +15,7 @@ def gerar_dados(n_linhas=20):
     print(f'🎲 Gerando {n_linhas} transações sintéticas...')
 
     for i in range (n_linhas):
-        valor_base = round(random.uniform(100.00, 500.00), 2)
+        Valor_base = round(random.uniform(100.00, 500.00), 2)
         data_vencimento = fake.date_this_month()
         empresa_cliente = fake.company()
         id_titulo = f"TIT-{1000 + i}"
@@ -23,7 +23,7 @@ def gerar_dados(n_linhas=20):
         dados_sistema.append({
             "ID_Titulo": id_titulo,
             "Data_Vencimento": data_vencimento,
-            "Valor_Previsto": valor_base,
+            "Valor_Previsto": Valor_base,
             "Cliente": empresa_cliente,
             "Descricao": f"Fatura {fake.bs()}"})
         
@@ -36,15 +36,15 @@ def gerar_dados(n_linhas=20):
             data_pagamento = data_vencimento + timedelta(days=dias_atraso)
 
             #variação de valor (ex:taxa de banco)
-            valor_final = valor_base
+            Valor_final = Valor_base
             if random.random() < 0.3:
                 taxa = 1.50
-                valor_final = round(valor_base - taxa, 2)
+                Valor_final = round(Valor_base - taxa, 2)
 
             dados_banco.append({
                 "ID_Transacao": f"TRX-{5000 + i}",
                 "Data_Extrato": data_pagamento,
-                "Valor_Extrato": valor_final,
+                "Valor_Extrato": Valor_final,
                 # A descrição no banco costuma ser ruim/curta
                 "Descricao_Banco": f"PGTO {empresa_cliente.split()[0].upper()} DOC {id_titulo[-4:]}"})
             

@@ -1,0 +1,10 @@
+services:
+  finmatch_ai:
+    build: .
+    container_name: finmatch_ai_container
+    ports:
+      - "8501:8501"
+    env_file: 
+      - .env
+    volumes:
+      - .:/app

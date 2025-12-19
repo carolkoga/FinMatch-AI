@@ -4,3 +4,5 @@ faker
 google-generativeai
 python-dotenv
 watchdog
+psycopg2-binary
+google-genai
