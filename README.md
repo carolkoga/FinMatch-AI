@@ -1,7 +1,7 @@
-# FinMatch-AI
 # 🛡️ FinMatch AI - Conciliação Financeira Inteligente
 
 > **Automated Financial Reconciliation System powered by Gemini AI & PostgreSQL**
+
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![Docker](https://img.shields.io/badge/Docker-Container-blue?logo=docker)
 ![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-red?logo=streamlit)
